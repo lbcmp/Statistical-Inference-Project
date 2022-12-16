@@ -1,0 +1,378 @@
+# Leah Benitez, MAT 327 Project
+
+# --------------------------------------------------------
+
+# Preview the data
+library(readr)
+mvc <- read_csv("mvc-data.csv")
+mvc
+
+# --------------------------------------------------------
+
+# Milestone 4: Single variable distribution plots
+
+# First, plot a histogram showing the distribution of the number of persons injured in MVCs in 2021
+hist(
+  mvc$"NUMBER OF PERSONS INJURED",
+  xlab="Number of Persons Injured",
+  main="Distribution of Number of Persons Injured in 2021 MVCs"
+)
+# You will see that the majority of crashes had no injuries, which makes the graph look very skewed. 
+
+# Now, plot a histogram showing the distribution of the number of persons killed in MVCs in 2021
+hist(
+  mvc$"NUMBER OF PERSONS KILLED",
+  xlab="Number of Persons Killed",
+  main="Distribution of Number of Persons Killed in 2021 MVCs"
+)
+# Again, you will see that the vast majority of crashes had no deaths, which makes the graph look very skewed.
+
+# Now, plot a bar chart showing the distribution of the Boroughs where MVCs in 2021 took place
+barplot(
+  table(mvc$BOROUGH),
+  xlab="Borough",
+  main="Distribution of Boroughs in 2021 MVCs"
+)
+
+# Now, plot a bar chart showing the distribution of the contributing factors for the first vehicle in MVCS that took place in 2021
+barplot(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"))
+c
+
+# There are too many contributing factors to make sense of, so let's see a bar chart with only the 5 most common contributing factors included
+barplot(
+  sort(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"), decreasing=TRUE)[2:6],
+  xlab="Contributing Factor",
+  ylab="Number of Collisions",
+  main="Distribution of Contributing Factor for Vehicle 1 in 2021 MVCs"
+)
+
+# Now, plot a bar chart showing the distribution of the vehicle types for the first vehicle in MVCS that took place in 2021
+barplot(table(mvc$"VEHICLE TYPE CODE 1"))
+
+# Again, there are too many vehicle types to make sense of, so let's see a bar chart with only the 5 most common vehicle types included
+barplot(
+  sort(table(mvc$"VEHICLE TYPE CODE 1"), decreasing=TRUE)[1:5],
+  xlab="Vehicle Type",
+  ylab="Number of Collisions",
+  main="Distribution of Vehicle Types for Vehicle 1 in 2021 MVCs"
+)
+
+# Extra information to help draw conclusions from graphs
+
+# Borough
+
+colors <- c("#e76f51", "#264653", "#8ab17d", "#2a9d8f", "#e9c46a")
+
+bor_proportions <- prop.table(table(mvc$BOROUGH))
+bor_proportions
+
+slices <- as.numeric(bor_proportions)
+labels <- names(bor_proportions)
+percentages <- round(slices * 100, digits=2)
+labels <- paste(labels, percentages)
+labels <- paste(labels, "%", sep="")
+pie(slices, labels=labels, col=colors, main="Borough Collision Proportions")
+
+population <- setNames(c(1424948, 2641052, 1576876, 2331143, 493494), c("BRONX", "BROOKLYN", "MANHATTAN", "QUEENS", "STATEN ISLAND"))
+
+pop_proportions <- prop.table(population)
+pop_proportions
+
+slices <- as.numeric(pop_proportions)
+labels <- names(pop_proportions)
+percentages <- round(slices * 100, digits=2)
+labels <- paste(labels, percentages)
+labels <- paste(labels, "%", sep="")
+pie(slices, labels=labels, col=colors, main="Borough Population Proportions")
+
+# Contributing Factor Vehicle 1
+
+sort(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"), decreasing=TRUE)[1:6]
+
+prop.table(sort(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"), decreasing=TRUE))[1:6]
+
+length(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"))
+
+# Vehicle Type Code 1
+
+sort(table(mvc$"VEHICLE TYPE CODE 1"), decreasing=TRUE)[1:6]
+
+prop.table(sort(table(mvc$"VEHICLE TYPE CODE 1"), decreasing=TRUE))[1:6]
+
+# Number of Persons Injured
+
+sort(table(mvc$"NUMBER OF PERSONS INJURED"), decreasing=TRUE)
+
+prop.table(sort(table(mvc$"NUMBER OF PERSONS INJURED"), decreasing=TRUE))
+
+max(mvc$"NUMBER OF PERSONS INJURED")
+
+# Number of Persons Killed
+
+sort(table(mvc$"NUMBER OF PERSONS KILLED"), decreasing=TRUE)
+
+prop.table(sort(table(mvc$"NUMBER OF PERSONS KILLED"), decreasing=TRUE))
+
+max(mvc$"NUMBER OF PERSONS KILLED")
+
+# -------------------------------------------------------
+
+
+# Milestone 5: Missing data and outliers (if applicable)
+
+# List all column names
+colnames(mvc)
+
+# First, drop unnecessary columns
+mvc <- mvc[ -c(4:10) ]
+mvc <- mvc[ -c(17)]
+colnames(mvc)
+
+# Now let's minimize missing data in the columns that are the best candidates for analyzing. The relevant columns are:
+#     Crash Date
+#     Crash Time
+#     Borough
+#     Number of Persons Injured
+#     Number of Persons Killed
+#     Number of Pedestrians Injured
+#     Number of Pedestrians Killed
+#     Number of Cyclist Injured
+#     Number of Cyclist Killed
+#     Number of Motorist Injured
+#     Number of Motorist Killed
+#     Contributing Factor Vehicle 1
+#     Vehicle Type Code 1
+
+# Let's go down the list of columns and see how many rows have missing data, or NA values, for each column. Check number of occurrences of NA for each column
+length(which(is.na(mvc$"CRASH DATE")))
+length(which(is.na(mvc$"CRASH TIME")))
+length(which(is.na(mvc$"BOROUGH")))
+length(which(is.na(mvc$"NUMBER OF PERSONS INJURED")))
+length(which(is.na(mvc$"NUMBER OF PERSONS KILLED")))
+length(which(is.na(mvc$"NUMBER OF PEDESTRIANS INJURED")))
+length(which(is.na(mvc$"NUMBER OF PEDESTRIANS KILLED")))
+length(which(is.na(mvc$"NUMBER OF CYCLIST INJURED")))
+length(which(is.na(mvc$"NUMBER OF CYCLIST KILLED")))
+length(which(is.na(mvc$"NUMBER OF MOTORIST INJURED")))
+length(which(is.na(mvc$"NUMBER OF MOTORIST KILLED")))
+length(which(is.na(mvc$"CONTRIBUTING FACTOR VEHICLE 1")))
+length(which(is.na(mvc$"VEHICLE TYPE CODE 1")))
+# Only columns BOROUGH, NUMBER OF PERSONS INJURED, CONTRIBUTING FACTOR VEHICLE 1 and VEHICLE TYPE CODE 1 have missing data in some rows. We will soon drop these rows, but first, let's see how many rows we started with
+nrow(mvc)
+# Before dropping rows, we have 110537 rows
+
+# Let's start with the BOROUGH column. Before, we saw that there are 38330 rows, or 38330 crashes, for which no boroughs were reported. Drop these and check occurrences again. You will see that no NA values remain
+mvc <- subset(mvc, !is.na(mvc$BOROUGH))
+length(which(is.na(mvc$"BOROUGH")))
+# Let's check how many rows remain. You will see the previous 110537 deducted by 38330 to give us 72207 rows remaining
+nrow(mvc)
+
+# Repeat for other columns
+
+# Check how many rows still have missing data for NUMBER OF PERSONS INJURED. Then drop rows as appropriate
+length(which(is.na(mvc$"NUMBER OF PERSONS INJURED")))
+# One of the rows we already dropped was the same row with missing data for NUMBER OF PERSONS INJURED, so continue
+
+# Check how many rows still have missing data for CONTRIBUTING FACTOR VEHICLE 1. Then, drop rows as appropriate
+length(which(is.na(mvc$"CONTRIBUTING FACTOR VEHICLE 1")))
+mvc <- subset(mvc, !is.na(mvc$"CONTRIBUTING FACTOR VEHICLE 1"))
+length(which(is.na(mvc$"CONTRIBUTING FACTOR VEHICLE 1")))
+nrow(mvc)
+# 423 rows had missing data for the CONTRIBUTING FACTOR VEHICLE 1 column, so drop those, which leaves 71784 rows remaining
+
+# Check how many rows still have missing data for VEHICLE TYPE CODE 1. Then, drop rows as appropriate
+length(which(is.na(mvc$"VEHICLE TYPE CODE 1")))
+mvc <- subset(mvc, !is.na(mvc$"VEHICLE TYPE CODE 1"))
+length(which(is.na(mvc$"VEHICLE TYPE CODE 1")))
+nrow(mvc)
+# 652 rows had missing data for the VEHICLE TYPE CODE 1 column, so drop those, which leaves 71132 rows remaining
+
+# Now we have dropped all the rows that have missing data for the columns we are interested in. We still have 71,132 rows to work with, which is plenty
+
+# Redo plots from Milestone 4:
+
+hist(
+  mvc$"NUMBER OF PERSONS INJURED",
+  xlab="Number of Persons Injured",
+  main="Distribution of Number of Persons Injured in 2021 MVCs"
+)
+
+hist(
+  (subset(mvc, mvc$"NUMBER OF PERSONS INJURED" > 1))$"NUMBER OF PERSONS INJURED",
+  xlab="Number of Persons Injured",
+  main="Distribution of Number of Persons Injured (>= 1) in 2021 MVCs)"
+)
+
+hist(
+  mvc$"NUMBER OF PERSONS KILLED",
+  xlab="Number of Persons Killed",
+  main="Distribution of Number of Persons Killed in 2021 MVCs"
+)
+
+barplot(
+  table(mvc$BOROUGH),
+  xlab="Borough",
+  main="Distribution of Boroughs in 2021 MVCs"
+)
+
+barplot(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"))
+
+barplot(
+  sort(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"), decreasing=TRUE)[2:6],
+  xlab="Contributing Factor",
+  main="Distribution of Contributing Factor for Vehicle 1 in 2021 MVCs"
+)
+
+barplot(table(mvc$"VEHICLE TYPE CODE 1"))
+
+barplot(
+  sort(table(mvc$"VEHICLE TYPE CODE 1"), decreasing=TRUE)[1:5],
+  xlab="Vehicle Type",
+  main="Distribution of Vehicle Types for Vehicle 1 in 2021 MVCs"
+)
+
+# Extra information to help draw conclusions
+
+
+# Borough
+table(mvc$BOROUGH)
+prop.table(table(mvc$BOROUGH))
+
+population <- setNames(c(1424948, 2641052, 1576876, 2331143, 493494), c("BRONX", "BROOKLYN", "MANHATTAN", "QUEENS", "STATEN ISLAND"))
+
+population
+prop.table(population)
+
+# Contributing Factor Vehicle 1
+
+sort(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"), decreasing=TRUE)[1:6]
+
+prop.table(sort(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"), decreasing=TRUE))[1:6]
+
+length(table(mvc$"CONTRIBUTING FACTOR VEHICLE 1"))
+
+# Vehicle Type Code 1
+
+sort(table(mvc$"VEHICLE TYPE CODE 1"), decreasing=TRUE)[1:6]
+
+prop.table(sort(table(mvc$"VEHICLE TYPE CODE 1"), decreasing=TRUE))[1:6]
+
+# Number of Persons Injured
+
+sort(table(mvc$"NUMBER OF PERSONS INJURED"), decreasing=TRUE)
+
+prop.table(sort(table(mvc$"NUMBER OF PERSONS INJURED"), decreasing=TRUE))
+
+max(mvc$"NUMBER OF PERSONS INJURED")
+
+# Number of Persons Killed
+
+sort(table(mvc$"NUMBER OF PERSONS KILLED"), decreasing=TRUE)
+
+prop.table(sort(table(mvc$"NUMBER OF PERSONS KILLED"), decreasing=TRUE))
+
+max(mvc$"NUMBER OF PERSONS KILLED")
+
+# --------------------------------------------------------
+
+# Milestone 6: Measures of center and spread
+
+# Compute the mean, median, variance,and standard deviation of the NUMBER OF PERSONS INJURED data
+
+mean(mvc$"NUMBER OF PERSONS INJURED")
+median(mvc$"NUMBER OF PERSONS INJURED")
+var(mvc$"NUMBER OF PERSONS INJURED")
+sd(mvc$"NUMBER OF PERSONS INJURED")
+
+# For reference, show number of occurrences for each value
+table(mvc$"NUMBER OF PERSONS INJURED")
+
+
+# Compute the mean, median, variance,and standard deviation of the NUMBER OF PERSONS KILLED data
+
+mean(mvc$"NUMBER OF PERSONS KILLED")
+median(mvc$"NUMBER OF PERSONS KILLED")
+var(mvc$"NUMBER OF PERSONS KILLED")
+sd(mvc$"NUMBER OF PERSONS KILLED")
+
+# For reference, show number of occurrences for each value
+table(mvc$"NUMBER OF PERSONS KILLED")
+
+# ----------------------------------------------------------
+
+# Milestone 7: Scatterplots and correlation
+
+# Create a scatterplot using the NUMBER OF PERSONS INJURED and NUMBER OF MOTORIST INJURED columns
+plot(
+  x=mvc$"NUMBER OF PERSONS INJURED",
+  y=mvc$"NUMBER OF MOTORIST INJURED",
+  xlab="Number of Persons Injured",
+  ylab="Number of Motorists Injured",
+  main="Correlation Between Number of Persons and Motorists Injured in 2021 MVCs"
+)
+
+# Compute the correlation between the columns/variables
+cor(mvc$"NUMBER OF MOTORIST INJURED", mvc$"NUMBER OF PERSONS INJURED")
+
+# ----------------------------------------------------------
+
+# Milestone 8: Confidence intervals
+
+# Compute the 95% confidence interval for the NUMBER OF PERSONS INJURED mean
+
+alpha = 1 - 0.95
+half_alpha = alpha / 2
+z = qnorm(1 - half_alpha)
+mean = mean(mvc$"NUMBER OF PERSONS INJURED")
+std = sd(mvc$"NUMBER OF PERSONS INJURED")
+n = length(mvc$"NUMBER OF PERSONS INJURED")
+left = mean - (z * std / sqrt(n))
+right = mean + (z * std / sqrt(n))
+sprintf("[%f, %f]", left, right)
+
+# Compute the 95% confidence interval for the NUMBER OF PERSONS KILLED mean
+
+alpha = 1 - 0.95
+half_alpha = alpha / 2
+z = qnorm(1 - half_alpha)
+mean = mean(mvc$"NUMBER OF PERSONS KILLED")
+std = sd(mvc$"NUMBER OF PERSONS KILLED")
+n = length(mvc$"NUMBER OF PERSONS KILLED")
+left = mean - (z * std / sqrt(n))
+right = mean + (z * std / sqrt(n))
+sprintf("[%f, %f]", left, right)
+
+# ----------------------------------------------------------
+
+# Milestone 9: Linear regression
+
+model <- lm(`NUMBER OF MOTORIST INJURED` ~ `NUMBER OF PERSONS INJURED`, data = mvc)
+model
+
+plot(
+  x=mvc$"NUMBER OF PERSONS INJURED",
+  y=mvc$"NUMBER OF MOTORIST INJURED",
+  xlab="Number of Persons Injured",
+  ylab="Number of Motorists Injured",
+  main="Linear Regression Relation Between Number of Persons and Motorists Injured in 2021 MVCs"
+) + abline(model, col="#e76f51")
+
+model_summary <- summary(model)
+model_summary
+
+model_summary$r.squared
+
+hist(
+  model_summary$residuals,
+  xlab="Residuals",
+  main="Histogram of Residuals"
+)
+
+plot(
+  x=fitted(model),
+  y=model$residuals,
+  xlab="Fitted Value",
+  ylab="Residual",
+  main="Fitted Values vs. Residuals"
+)
+
